@@ -28,14 +28,14 @@ for select to authenticated
 using (
   bucket_id = 'request-media'
   and exists (
-    select 1 from public.requests r
+    select 1 from askr.requests r
     where r.id::text = (storage.foldername(name))[1]
       and (
         r.buyer_id = auth.uid()
-        or public.is_admin()
+        or askr.is_admin()
         or exists (
-          select 1 from public.request_broadcasts b
-          where b.request_id = r.id and b.provider_id = public.my_provider_id()
+          select 1 from askr.request_broadcasts b
+          where b.request_id = r.id and b.provider_id = askr.my_provider_id()
         )
       )
   )
@@ -46,7 +46,7 @@ for insert to authenticated
 with check (
   bucket_id = 'request-media'
   and exists (
-    select 1 from public.requests r
+    select 1 from askr.requests r
     where r.id::text = (storage.foldername(name))[1] and r.buyer_id = auth.uid()
   )
 );
@@ -56,7 +56,7 @@ for delete to authenticated
 using (
   bucket_id = 'request-media'
   and exists (
-    select 1 from public.requests r
+    select 1 from askr.requests r
     where r.id::text = (storage.foldername(name))[1] and r.buyer_id = auth.uid()
   )
 );
@@ -68,12 +68,12 @@ for select to authenticated
 using (
   bucket_id = 'offer-attachments'
   and exists (
-    select 1 from public.offers o
+    select 1 from askr.offers o
     where o.id::text = (storage.foldername(name))[1]
       and (
-        o.provider_id = public.my_provider_id()
-        or public.is_admin()
-        or exists (select 1 from public.requests r where r.id = o.request_id and r.buyer_id = auth.uid())
+        o.provider_id = askr.my_provider_id()
+        or askr.is_admin()
+        or exists (select 1 from askr.requests r where r.id = o.request_id and r.buyer_id = auth.uid())
       )
   )
 );
@@ -83,8 +83,8 @@ for insert to authenticated
 with check (
   bucket_id = 'offer-attachments'
   and exists (
-    select 1 from public.offers o
-    where o.id::text = (storage.foldername(name))[1] and o.provider_id = public.my_provider_id()
+    select 1 from askr.offers o
+    where o.id::text = (storage.foldername(name))[1] and o.provider_id = askr.my_provider_id()
   )
 );
 
@@ -97,8 +97,8 @@ for select to authenticated
 using (
   bucket_id = 'provider-documents'
   and (
-    (storage.foldername(name))[1] = public.my_provider_id()::text
-    or public.is_admin()
+    (storage.foldername(name))[1] = askr.my_provider_id()::text
+    or askr.is_admin()
   )
 );
 
@@ -106,7 +106,7 @@ create policy provider_documents_write on storage.objects
 for insert to authenticated
 with check (
   bucket_id = 'provider-documents'
-  and (storage.foldername(name))[1] = public.my_provider_id()::text
+  and (storage.foldername(name))[1] = askr.my_provider_id()::text
 );
 
 -- ---------------------------------------------------------------- provider logos
@@ -119,14 +119,14 @@ create policy provider_logos_write on storage.objects
 for insert to authenticated
 with check (
   bucket_id = 'provider-logos'
-  and (storage.foldername(name))[1] = public.my_provider_id()::text
+  and (storage.foldername(name))[1] = askr.my_provider_id()::text
 );
 
 create policy provider_logos_update on storage.objects
 for update to authenticated
 using (
   bucket_id = 'provider-logos'
-  and (storage.foldername(name))[1] = public.my_provider_id()::text
+  and (storage.foldername(name))[1] = askr.my_provider_id()::text
 );
 
 -- ---------------------------------------------------------------- chat attachments
@@ -136,10 +136,10 @@ for select to authenticated
 using (
   bucket_id = 'chat-attachments'
   and (
-    public.is_admin()
-    or (storage.foldername(name))[2] = public.my_provider_id()::text
+    askr.is_admin()
+    or (storage.foldername(name))[2] = askr.my_provider_id()::text
     or exists (
-      select 1 from public.requests r
+      select 1 from askr.requests r
       where r.id::text = (storage.foldername(name))[1] and r.buyer_id = auth.uid()
     )
   )
@@ -150,9 +150,9 @@ for insert to authenticated
 with check (
   bucket_id = 'chat-attachments'
   and (
-    (storage.foldername(name))[2] = public.my_provider_id()::text
+    (storage.foldername(name))[2] = askr.my_provider_id()::text
     or exists (
-      select 1 from public.requests r
+      select 1 from askr.requests r
       where r.id::text = (storage.foldername(name))[1] and r.buyer_id = auth.uid()
     )
   )

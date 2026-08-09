@@ -46,7 +46,7 @@ DECISIONS THAT WOULD NOT BE OBVIOUS
      and required reasons. No DB, so it is exhaustively unit-testable with no
      Docker. Adding an edge means editing the table; machine.test.ts hard-codes
      the eight documented moves separately so the table cannot drift silently.
-   - public.apply_order_transition() in SQL is the atomic tail: SELECT ... FOR
+   - askr.apply_order_transition() in SQL is the atomic tail: SELECT ... FOR
      UPDATE, re-check the from-state, UPDATE orders, INSERT order_events, all in
      one transaction. It is the only thing permitted to change orders.state —
      the orders_state_guard trigger raises on any other UPDATE, including from
@@ -75,8 +75,32 @@ DECISIONS THAT WOULD NOT BE OBVIOUS
    guard_provider_self_service() likewise strips verification_status,
    rating fields and stripe_account_id from any non-admin update.
 
-6. Geo is a plain haversine SQL function (public.distance_km), not PostGIS —
+6. Geo is a plain haversine SQL function (askr.distance_km), not PostGIS —
    nothing in Phase 1 needs spatial indexes.
+
+
+DEPLOYMENT
+----------
+Target: Vercel (Next.js app) + hosted Supabase project. Tables live in a
+Postgres schema named `askr`, NOT public.
+
+Two settings that will silently break everything if missed:
+  * Supabase > Project Settings > API > Exposed schemas must include `askr`.
+    Without it every query returns "The schema must be one of the following".
+  * The supabase-js clients pass { db: { schema: "askr" } }. Any new client
+    must do the same or it will query public and find nothing.
+
+Custom schemas get none of the grants Supabase applies to public, which is why
+20260809000050_schema.sql sets usage + default privileges and
+20260809000400_grants.sql re-applies them explicitly after the tables exist.
+apply_order_transition has EXECUTE revoked from anon/authenticated: it is the
+sole writer of orders.state and only the service role may call it.
+
+Vercel env vars needed: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY,
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_SITE_URL.
+
+Repo: https://github.com/smohap/Askr (branch main).
 
 
 ENVIRONMENT NOTE

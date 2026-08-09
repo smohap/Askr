@@ -5,7 +5,7 @@
 -- All eighteen PRD categories exist as rows. Six are Phase 1 and route; the rest
 -- are seeded so the taxonomy is complete and nothing has to be backfilled later.
 
-insert into public.categories (slug, name, is_phase1, sort_order) values
+insert into askr.categories (slug, name, is_phase1, sort_order) values
   ('home-services',         'Home Services',         true,  10),
   ('automotive',            'Automotive',            true,  20),
   ('electronics',           'Electronics',           true,  30),
@@ -83,12 +83,12 @@ where u.email like '%@askr.test'
 on conflict do nothing;
 
 -- 'admin' is deliberately not settable from signup metadata, so it is set here.
-update public.profiles set role = 'admin' where id = '22222222-2222-4222-8222-222222222222';
+update askr.profiles set role = 'admin' where id = '22222222-2222-4222-8222-222222222222';
 
 -- ---------------------------------------------------------------- providers
 -- Coordinates are around Mount Eden, Auckland — the mockup's example location.
 
-insert into public.provider_profiles (
+insert into askr.provider_profiles (
   id, user_id, business_name, tagline, about, location_label, lat, lng,
   service_radius_km, verification_status, rating_avg, rating_count, jobs_completed
 )
@@ -117,10 +117,10 @@ on conflict (id) do nothing;
 
 -- Cleaning providers cover Home Services; Best Clean also takes Automotive
 -- (interior valets), which gives the matcher a two-category provider to sort out.
-insert into public.provider_categories (provider_id, category_id)
+insert into askr.provider_categories (provider_id, category_id)
 select p.id, c.id
-from public.provider_profiles p
-join public.categories c on c.slug = 'home-services'
+from askr.provider_profiles p
+join askr.categories c on c.slug = 'home-services'
 where p.id in (
   'aaaaaaaa-0000-4000-8000-000000000001',
   'aaaaaaaa-0000-4000-8000-000000000002',
@@ -129,15 +129,15 @@ where p.id in (
 )
 on conflict do nothing;
 
-insert into public.provider_categories (provider_id, category_id)
+insert into askr.provider_categories (provider_id, category_id)
 select p.id, c.id
-from public.provider_profiles p
-join public.categories c on c.slug = 'automotive'
+from askr.provider_profiles p
+join askr.categories c on c.slug = 'automotive'
 where p.id = 'aaaaaaaa-0000-4000-8000-000000000003'
 on conflict do nothing;
 
 -- A pending document for the admin queue to act on.
-insert into public.provider_documents (provider_id, doc_type, storage_path, status)
+insert into askr.provider_documents (provider_id, doc_type, storage_path, status)
 values
   ('aaaaaaaa-0000-4000-8000-000000000004', 'identity',
    'aaaaaaaa-0000-4000-8000-000000000004/identity-sample.pdf', 'pending'),
