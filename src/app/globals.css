@@ -1,0 +1,144 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-void: var(--void);
+  --color-panel: var(--panel);
+  --color-panel-raised: var(--panel-raised);
+  --color-grid: var(--grid);
+  --color-grid-soft: var(--grid-soft);
+  --color-signal: var(--signal);
+  --color-signal-dim: var(--signal-dim);
+  --color-signal-wash: var(--signal-wash);
+  --color-signal-wash-soft: var(--signal-wash-soft);
+  --color-amber: var(--amber);
+  --color-danger: var(--danger);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-void-ink: var(--void-ink);
+
+  --font-display: var(--font-space-grotesk), sans-serif;
+  --font-sans: var(--font-inter), sans-serif;
+  --font-mono: var(--font-plex-mono), monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--void);
+    color: var(--text);
+    font-family: var(--font-inter), sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--signal);
+    color: var(--void);
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+  }
+
+  /* focus ring for keyboard users — signal, since it is a live state */
+  :focus-visible {
+    outline: 2px solid var(--signal-dim);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* the 40px grid texture behind the app shell (mockup body background-image) */
+  .bg-grid-texture {
+    background-image: linear-gradient(var(--grid-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-soft) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* ---- functional motion only ---- */
+
+/* live-state dot (mockup .live-status .d) */
+@keyframes askr-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+.animate-blink {
+  animation: askr-blink 1.6s infinite;
+}
+
+/* radar sweep on the broadcasting screen */
+@keyframes askr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-sweep {
+  transform-origin: 110px 110px;
+  animation: askr-spin 2.2s linear infinite;
+}
+
+/* an offer landing in the live feed (mockup .offer-card) */
+@keyframes askr-slidein {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-land {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: askr-slidein 0.4s forwards;
+}
+
+/* escrow state transition — the timeline row that just changed */
+@keyframes askr-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--signal-wash);
+  }
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.animate-state-change {
+  animation: askr-pulse-ring 1.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blink,
+  .animate-sweep,
+  .animate-land,
+  .animate-state-change {
+    animation: none;
+  }
+  .animate-land {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,38 @@
+/*
+ * Design tokens — extracted verbatim from askr-mockup.html :root.
+ * This is the ONLY file in the app allowed to contain a colour literal.
+ * Everything else references a token through the Tailwind theme map in globals.css.
+ */
+
+:root {
+  /* surfaces — near-black, three depths */
+  --void: #0b0e14;
+  --panel: #11151f;
+  --panel-raised: #161b27;
+
+  /* borders */
+  --grid: #232b3b;
+  --grid-soft: #1a2130;
+
+  /* the one high-signal accent — live state, best match, single primary action */
+  --signal: #4cffa6;
+  --signal-dim: #2a9a6c;
+
+  /* pending / warning, and destructive / failed */
+  --amber: #ffb454;
+  --danger: #ff5470;
+
+  /* type */
+  --text: #edeff3;
+  --muted: #8a93a6;
+  --faint: #525a6b;
+
+  /* translucencies the mockup derives from --signal */
+  --signal-wash: rgba(76, 255, 166, 0.08);
+  --signal-wash-soft: rgba(76, 255, 166, 0.06);
+
+  /* text colour on a --signal-dim fill (mockup .msg.me) */
+  --void-ink: #04140d;
+
+  --radius: 10px;
+}
