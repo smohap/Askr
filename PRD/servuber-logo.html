@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servuber — Motion Logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0B0E14; --panel:#11151F;
+    --grid:#1F2635; --grid-soft:#171D2A;
+    --signal:#4CFFA6; --signal-dim:#2A9A6C;
+    --amber:#FFB454;
+    --text:#EDEFF3; --muted:#8A93A6; --faint:#525A6B;
+    --cycle:6s;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--void); color:var(--text); font-family:'IBM Plex Mono',monospace;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; gap:28px;
+    padding:50px 16px 70px;
+    background-image:linear-gradient(var(--grid-soft) 1px, transparent 1px), linear-gradient(90deg, var(--grid-soft) 1px, transparent 1px);
+    background-size:40px 40px;
+  }
+  h1{font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:600; letter-spacing:.01em;}
+  .subhead{font-size:11px; color:var(--faint); letter-spacing:.08em; text-transform:uppercase; margin-top:-16px; margin-bottom:6px;}
+
+  /* ---------- stage ---------- */
+  .stage{
+    width:min(640px, 92vw); aspect-ratio:16/10; background:var(--panel);
+    border:1px solid var(--grid); border-radius:20px; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stage::before{
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 45%, rgba(76,255,166,.06), transparent 60%);
+  }
+
+  .canvas{ position:relative; width:420px; height:260px; }
+  svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+
+  /* ---- seeker ---- */
+  .seeker{ animation: seekerIn var(--cycle) ease infinite; transform-origin:center; }
+  @keyframes seekerIn{
+    0%{ opacity:0; transform:scale(.6); }
+    6%{ opacity:1; transform:scale(1); }
+    92%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(.6); }
+  }
+
+  /* ---- rings (the ask / signal) ---- */
+  .ring{
+    fill:none; stroke:var(--signal); stroke-width:2;
+    transform-origin:114px 150px;
+    animation: ringPulse var(--cycle) ease-out infinite;
+    opacity:0;
+  }
+  .ring.r1{ animation-delay:.55s; }
+  .ring.r2{ animation-delay:.95s; }
+  .ring.r3{ animation-delay:1.35s; }
+  @keyframes ringPulse{
+    0%{ opacity:.9; transform:scale(.3); }
+    9%{ opacity:.6; transform:scale(1.6); }
+    16%{ opacity:0; transform:scale(2.4); }
+    100%{ opacity:0; transform:scale(2.4); }
+  }
+
+  /* ---- trail path the helper follows ---- */
+  .trail{
+    fill:none; stroke:var(--grid); stroke-width:1.5; stroke-dasharray:4 5;
+  }
+  .trail-fill{
+    fill:none; stroke:var(--signal-dim); stroke-width:1.5; stroke-dasharray:236; stroke-dashoffset:236;
+    animation: trailDraw var(--cycle) ease infinite;
+  }
+  @keyframes trailDraw{
+    0%,18%{ stroke-dashoffset:236; opacity:0; }
+    22%{ opacity:1; }
+    46%{ stroke-dashoffset:0; opacity:1; }
+    54%{ opacity:0; }
+    100%{ opacity:0; stroke-dashoffset:0; }
+  }
+
+  /* ---- helper (arrives along the trail) ---- */
+  .helper{
+    animation: helperMove var(--cycle) cubic-bezier(.3,.6,.3,1) infinite;
+    opacity:0;
+  }
+  @keyframes helperMove{
+    0%,20%{ opacity:0; transform:translate(150px,-40px) scale(.7); }
+    26%{ opacity:1; }
+    48%{ opacity:1; transform:translate(0,0) scale(1); }
+    58%{ opacity:0; transform:translate(0,0) scale(1); }
+    100%{ opacity:0; transform:translate(150px,-40px) scale(.7); }
+  }
+
+  /* ---- meeting flash ---- */
+  .flash{
+    fill:var(--signal); opacity:0; transform-origin:114px 150px;
+    animation: flashPulse var(--cycle) ease-out infinite;
+  }
+  @keyframes flashPulse{
+    0%,46%{ opacity:0; transform:scale(0); }
+    50%{ opacity:.85; transform:scale(2.6); }
+    58%{ opacity:0; transform:scale(3.4); }
+    100%{ opacity:0; transform:scale(0); }
+  }
+
+  /* ---- resolved mark: node + check ---- */
+  .resolved{ opacity:0; animation: resolvedIn var(--cycle) ease infinite; }
+  @keyframes resolvedIn{
+    0%,50%{ opacity:0; transform:scale(.6); }
+    56%{ opacity:1; transform:scale(1.08); }
+    60%{ transform:scale(1); }
+    90%{ opacity:1; transform:scale(1); }
+    100%{ opacity:0; transform:scale(.6); }
+  }
+  .check{
+    fill:none; stroke:var(--void); stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:26; stroke-dashoffset:26;
+    animation: checkDraw var(--cycle) ease infinite;
+  }
+  @keyframes checkDraw{
+    0%,58%{ stroke-dashoffset:26; }
+    68%{ stroke-dashoffset:0; }
+    100%{ stroke-dashoffset:0; }
+  }
+
+  /* ---- wordmark ---- */
+  .wordwrap{
+    position:absolute; left:0; right:0; bottom:14px; text-align:center;
+    opacity:0; animation: wordIn var(--cycle) ease infinite;
+  }
+  @keyframes wordIn{
+    0%,58%{ opacity:0; transform:translateY(10px); }
+    66%{ opacity:1; transform:translateY(0); }
+    90%{ opacity:1; transform:translateY(0); }
+    100%{ opacity:0; transform:translateY(10px); }
+  }
+  .wordmark{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; letter-spacing:.01em; color:var(--text);
+  }
+  .wordmark span{ color:var(--signal); }
+  .tagline{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin-top:4px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .seeker,.ring,.trail-fill,.helper,.flash,.resolved,.check,.wordwrap{ animation: none !important; }
+    .seeker,.resolved,.wordwrap{ opacity:1; transform:none; }
+    .helper{ opacity:1; transform:translate(0,0); }
+    .check{ stroke-dashoffset:0; }
+    .ring,.trail-fill,.flash{ opacity:0; }
+  }
+
+  /* ---------- controls ---------- */
+  .controls{ display:flex; gap:10px; align-items:center; }
+  .btn{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted);
+    background:var(--panel); border:1px solid var(--grid); padding:9px 16px; border-radius:8px;
+    cursor:pointer; letter-spacing:.04em;
+  }
+  .btn:hover{ color:var(--text); border-color:var(--signal-dim); }
+  .btn.active{ color:var(--signal); border-color:var(--signal-dim); }
+
+  /* ---------- static lockup reference ---------- */
+  .lockup-row{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .lockup{
+    background:var(--panel); border:1px solid var(--grid); border-radius:14px;
+    padding:22px 26px; display:flex; align-items:center; gap:12px;
+  }
+  .lockup.dark{ background:var(--void); }
+  .lockup.light{ background:#EDEFF3; }
+  .mark{
+    width:34px; height:34px; border-radius:10px; position:relative; flex:none;
+    background:var(--panel);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lockup.light .mark{ background:#0B0E14; }
+  .mark::after{
+    content:''; width:12px; height:12px; border-radius:50%; background:var(--signal);
+    box-shadow:0 0 10px var(--signal);
+  }
+  .lockup .wordmark-static{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; color:var(--text); }
+  .lockup.light .wordmark-static{ color:#0B0E14; }
+  .lockup .wordmark-static span{ color:var(--signal); }
+
+  .note{ max-width:520px; text-align:center; font-size:12px; color:var(--muted); line-height:1.7; font-family:'IBM Plex Mono',monospace; }
+  .note b{ color:var(--text); }
+</style>
+</head>
+<body>
+
+<h1>Servuber — motion logo</h1>
+<div class="subhead">a need is sent · someone arrives to meet it</div>
+
+<div class="stage" id="stage">
+  <div class="canvas">
+    <svg viewBox="0 0 420 260">
+      <!-- dotted trail the helper travels along -->
+      <path class="trail" d="M 264,110 C 320,95 350,120 306,150" />
+      <path class="trail-fill" d="M 264,110 C 320,95 350,120 306,150" />
+
+      <!-- seeker: raised-hand figure -->
+      <g class="seeker">
+        <circle cx="114" cy="132" r="9" fill="var(--text)"/>
+        <path d="M 100,168 Q 114,146 128,168 L 128,182 Q 114,190 100,182 Z" fill="var(--text)"/>
+        <path d="M 122,150 L 140,124" stroke="var(--text)" stroke-width="4" stroke-linecap="round"/>
+      </g>
+
+      <!-- ask rings -->
+      <circle class="ring r1" cx="114" cy="150" r="20"/>
+      <circle class="ring r2" cx="114" cy="150" r="20"/>
+      <circle class="ring r3" cx="114" cy="150" r="20"/>
+
+      <!-- helper, travels in -->
+      <g class="helper">
+        <circle cx="114" cy="132" r="9" fill="var(--amber)"/>
+        <path d="M 100,168 Q 114,146 128,168 L 128,182 Q 114,190 100,182 Z" fill="var(--amber)"/>
+      </g>
+
+      <!-- meeting flash -->
+      <circle class="flash" cx="114" cy="150" r="10"/>
+
+      <!-- resolved node: handshake resolved into check -->
+      <g class="resolved">
+        <circle cx="114" cy="150" r="22" fill="var(--signal)"/>
+        <path class="check" d="M 104,150 L 111,158 L 126,141" />
+      </g>
+    </svg>
+
+    <div class="wordwrap">
+      <div class="wordmark">Serv<span>uber</span></div>
+      <div class="tagline">Ask. Help arrives.</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="btn active" id="btnPlay" onclick="setPlaying(true)">▶ Playing</div>
+  <div class="btn" id="btnPause" onclick="setPlaying(false)">⏸ Pause</div>
+  <div class="btn" onclick="replay()">↻ Replay</div>
+</div>
+
+<p class="note">Loops every 6s. <b>Seeker</b> (white) sends a signal outward · <b>helper</b> (amber) homes in along the response trail · on contact the two resolve into a single <b>signal-green</b> node with a check — the moment the need is met — before the wordmark settles in. Built with CSS keyframes on one shared timeline, so every element stays in sync without JS; respects reduced-motion.</p>
+
+<div class="lockup-row">
+  <div class="lockup dark"><div class="mark"></div><div class="wordmark-static">Serv<span>uber</span></div></div>
+  <div class="lockup light"><div class="mark"></div><div class="wordmark-static">Serv<span>uber</span></div></div>
+</div>
+
+<script>
+  const stage = document.getElementById('stage');
+  function setPlaying(playing){
+    document.getElementById('btnPlay').classList.toggle('active', playing);
+    document.getElementById('btnPause').classList.toggle('active', !playing);
+    stage.style.setProperty('--play-state', playing ? 'running' : 'paused');
+    stage.querySelectorAll('*').forEach(el => el.style.animationPlayState = playing ? 'running' : 'paused');
+    if(!playing){
+      // pause right on the resolved frame for a clean still
+      setTimeout(() => { stage.querySelectorAll('*').forEach(el => el.style.animationPlayState = 'paused'); }, 50);
+    }
+  }
+  function replay(){
+    stage.querySelectorAll('*').forEach(el => {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    });
+    setPlaying(true);
+  }
+</script>
+</body>
+</html>

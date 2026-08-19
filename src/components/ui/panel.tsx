@@ -100,11 +100,28 @@ export function Metric({
   );
 }
 
-export function EmptyState({ title, hint }: { title: string; hint?: string }) {
+export function EmptyState({
+  title,
+  hint,
+  action,
+}: {
+  title: string;
+  hint?: string;
+  /** The one thing to do from here, when there is one. */
+  action?: { href: string; label: string };
+}) {
   return (
     <div className="rounded-xl border border-dashed border-grid px-5 py-10 text-center">
       <p className="text-[13.5px] font-semibold">{title}</p>
       {hint && <p className="mt-1.5 text-[12px] text-muted">{hint}</p>}
+      {action && (
+        <Link
+          href={action.href}
+          className="mt-4 inline-block rounded-lg bg-signal px-4 py-2 text-[12.5px] font-bold text-void transition-opacity hover:opacity-90"
+        >
+          {action.label}
+        </Link>
+      )}
     </div>
   );
 }
