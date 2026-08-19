@@ -1,5 +1,5 @@
--- Askr seed. Development only — every account here shares one password.
--- Password for all seeded accounts: askr-dev-password
+-- Servuber seed. Development only — every account here shares one password.
+-- Password for all seeded accounts: servuber-dev-password
 
 -- ---------------------------------------------------------------- categories
 -- All eighteen PRD categories exist as rows. Six are Phase 1 and route; the rest
@@ -36,38 +36,38 @@ insert into auth.users (
 )
 values
   ('00000000-0000-0000-0000-000000000000', '11111111-1111-4111-8111-111111111111',
-   'authenticated', 'authenticated', 'buyer@askr.test',
-   crypt('askr-dev-password', gen_salt('bf')), now(),
+   'authenticated', 'authenticated', 'buyer@servuber.test',
+   crypt('servuber-dev-password', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}',
    '{"role":"buyer","full_name":"Ana Whitfield"}', now(), now()),
 
   ('00000000-0000-0000-0000-000000000000', '22222222-2222-4222-8222-222222222222',
-   'authenticated', 'authenticated', 'admin@askr.test',
-   crypt('askr-dev-password', gen_salt('bf')), now(),
+   'authenticated', 'authenticated', 'admin@servuber.test',
+   crypt('servuber-dev-password', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}',
-   '{"role":"buyer","full_name":"Askr Admin"}', now(), now()),
+   '{"role":"buyer","full_name":"Servuber Admin"}', now(), now()),
 
   ('00000000-0000-0000-0000-000000000000', '33333333-3333-4333-8333-333333333333',
-   'authenticated', 'authenticated', 'sparkle@askr.test',
-   crypt('askr-dev-password', gen_salt('bf')), now(),
+   'authenticated', 'authenticated', 'sparkle@servuber.test',
+   crypt('servuber-dev-password', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}',
    '{"role":"provider","full_name":"Sione Cooper"}', now(), now()),
 
   ('00000000-0000-0000-0000-000000000000', '44444444-4444-4444-8444-444444444444',
-   'authenticated', 'authenticated', 'maidbright@askr.test',
-   crypt('askr-dev-password', gen_salt('bf')), now(),
+   'authenticated', 'authenticated', 'maidbright@servuber.test',
+   crypt('servuber-dev-password', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}',
    '{"role":"provider","full_name":"Mira Baxter"}', now(), now()),
 
   ('00000000-0000-0000-0000-000000000000', '55555555-5555-4555-8555-555555555555',
-   'authenticated', 'authenticated', 'bestclean@askr.test',
-   crypt('askr-dev-password', gen_salt('bf')), now(),
+   'authenticated', 'authenticated', 'bestclean@servuber.test',
+   crypt('servuber-dev-password', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}',
    '{"role":"provider","full_name":"Bevan Chand"}', now(), now()),
 
   ('00000000-0000-0000-0000-000000000000', '66666666-6666-4666-8666-666666666666',
-   'authenticated', 'authenticated', 'freshstart@askr.test',
-   crypt('askr-dev-password', gen_salt('bf')), now(),
+   'authenticated', 'authenticated', 'freshstart@servuber.test',
+   crypt('servuber-dev-password', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}',
    '{"role":"provider","full_name":"Fiona Reid"}', now(), now())
 on conflict (id) do nothing;
@@ -79,7 +79,7 @@ select
   jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true),
   'email', now(), now(), now()
 from auth.users u
-where u.email like '%@askr.test'
+where u.email like '%@servuber.test'
 on conflict do nothing;
 
 -- 'admin' is deliberately not settable from signup metadata, so it is set here.
@@ -110,7 +110,7 @@ values
 
   -- Unverified on purpose: this is the row the admin verification queue opens on.
   ('aaaaaaaa-0000-4000-8000-000000000004', '66666666-6666-4666-8666-666666666666',
-   'Fresh Start Services', 'New to Askr',
+   'Fresh Start Services', 'New to Servuber',
    'Recently registered. Awaiting document verification.',
    'Grey Lynn, Auckland', -36.8600, 174.7400, 10, 'pending', 0, 0, 0)
 on conflict (id) do nothing;

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 // Weights are the ones the mockup loads, no more.
@@ -23,9 +24,11 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Askr — post what you need",
-  description:
-    "Post one request. Verified providers across New Zealand compete with offers within minutes.",
+  title: {
+    default: `${BRAND.name} — ${BRAND.tagline}`,
+    template: `%s · ${BRAND.name}`,
+  },
+  description: BRAND.description,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

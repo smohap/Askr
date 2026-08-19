@@ -1,4 +1,4 @@
-ASKR — BUILD PROGRESS
+SERVUBER — BUILD PROGRESS
 =====================
 Phase 1 (MVP) per askr-build-prompt-v2.md. Behaviour from askr-prd.html,
 visual language from askr-mockup.html.
@@ -101,6 +101,8 @@ SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY,
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_SITE_URL.
 
 Repo: https://github.com/smohap/Askr (branch main).
+Brand: Servuber — "Service at your choice of price" (src/lib/brand.ts).
+The Postgres schema stays skr: it is an infra name, not the brand.
 
 
 ENVIRONMENT NOTE
