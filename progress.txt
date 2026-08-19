@@ -51,21 +51,72 @@ Step 5 — offers (buyer half done)
   * OfferStack with sort by price/rating/ETA/distance, live via Realtime,
     visible expiry countdown (mockup 04).
 
-40 unit tests passing (`npm test`). `npx next build` clean.
+Step 7 — escrow, Stripe end of it
+  * src/lib/stripe/server.ts — the client, created lazily. A top-level client
+    makes STRIPE_SECRET_KEY a build-time requirement, and `next build` imports
+    every route module to collect page data.
+  * src/lib/stripe/escrow.ts — hosted Checkout, transfer, refund, Connect
+    onboarding. src/lib/escrow/settle.ts pairs each money move with its
+    transition; src/lib/escrow/actions.ts is every buyer/provider affordance.
+  * /api/stripe/webhook — signature-verified, idempotent on event id.
+  * /orders/[id]/pay (mockup 08), /orders/[id] with the timeline (mockup 09),
+    /provider/jobs + /provider/jobs/[id], /provider/payouts.
+  * The dangling /orders/[id]/pay route is now real.
+
+Step 8 — ratings and reviews
+  * /orders/[id]/review (mockup 10) — star picker, one review per order.
+  * /provider/reviews — the provider's right of reply, reply columns only.
+  * Reviews render on the offer page, where the buyer is deciding.
+
+Step 10 — admin console
+  * (admin) route group: /admin overview, /admin/verification, /admin/disputes
+    and /admin/disputes/[id].
+  * Verification: per-document approve/reject and a separate provider decision,
+    both refusing a rejection with no reason. Documents open through signed
+    URLs, one hour.
+  * Disputes: the resolve form writes one reason and applies it whichever way
+    the admin decides, then releases or refunds.
+  * Overview reports settled GMV, commission, money currently in escrow, orders
+    by state and what is waiting on an admin.
+
+Step 11 — tests
+  * src/lib/escrow/transition.test.ts — transition() against a stubbed client:
+    that it validates before writing, passes the from-state it validated
+    against, and turns a lost race into a TransitionError. 46 unit tests pass.
+  * e2e/buyer-journey.spec.ts — post, offer, accept, pay, start, deliver,
+    confirm, review. e2e/admin.spec.ts — verify a provider, then refund a
+    disputed order.
+  * playwright.config.ts. NOTHING IS STUBBED in e2e: it needs a live database,
+    Stripe test keys and `stripe listen` forwarding to the webhook, because the
+    order does not leave pending_payment without it.
+
+46 unit tests passing (`npm test`). `npx next build` clean.
 
 
 NEXT
 ----
-Step 7 — escrow + Stripe. transition() and the state machine exist; what is
-missing is the Stripe Connect wiring, /api/stripe/webhook, /orders/[id]/pay
-and /orders/[id] (timeline rendered from order_events).
-NOTE: accepting an offer already redirects to /orders/[id]/pay, which does
-not exist yet. That is the one known dangling route.
+Phase 1 is feature-complete. Nothing is left in the build order.
 
-Then 8 (reviews), 10 (admin console), 11 (Playwright).
+Before this can be trusted, in priority order:
 
-Also still missing: database.types.ts (needs a live DB for typegen — RPC
-results and joined rows are hand-typed until then).
+1. Run the migrations. Still true that no SQL in this repo has ever executed
+   (see ENVIRONMENT NOTE). Everything above is written against a schema no
+   Postgres has accepted yet.
+2. Run the e2e suite. It has never run either — the same reason, plus no
+   Stripe keys on this machine.
+3. database.types.ts, once there is a live DB to generate from. Joined rows and
+   RPC results are hand-typed with `as unknown as` until then, so a schema
+   change will not break the build where it should.
+
+Two lint errors predate this session and remain: react-hooks/purity on the
+Date.now() in the offer page, and react-hooks/set-state-in-effect in
+chat-thread.tsx. Both are in shared components on the accept path; neither was
+touched here because fixing them is a behaviour change, not a step.
+
+Known gap worth naming: a provider who has not finished Connect onboarding
+blocks release — releaseOrder() throws with their business name in it. The
+right fix is to stop them offering at all until payouts are enabled, which is
+a change to the offer form, not to escrow.
 
 
 DECISIONS THAT WOULD NOT BE OBVIOUS
@@ -113,7 +164,38 @@ DECISIONS THAT WOULD NOT BE OBVIOUS
    same notice whether or not the address exists. Distinguishing "no such
    account" from "wrong password" enumerates registered emails.
 
-8. Best match uses a 0.15 rating band, calibrated against the mockup's own
+8. Escrow is separate charges and transfers, not delayed capture. The buyer's
+   card is charged in full at accept time and the money sits in the platform
+   balance; on release the provider's share is transferred to their connected
+   account and the commission stays behind. Manual capture would have been
+   simpler, but a card authorisation expires in seven days and a scheduled job
+   can sit in escrow longer than that. This is why orders carries both
+   stripe_transfer_id and stripe_account_id.
+
+9. Stripe runs before the transition, never after. releaseOrder() and
+   refundOrder() call Stripe first and record what it returned. Ledger-first
+   can leave an order marked released with nothing transferred, and that is
+   indistinguishable afterwards from a real release. Both Stripe calls carry an
+   idempotency key derived from the order id, so the retry after a failed
+   transition is safe.
+
+10. Hosted Checkout, not an embedded card form. Card details never reach this
+    app and there is no client Stripe dependency to keep current. The cost is a
+    redirect out and back; success_url is a navigation and is never treated as
+    proof of payment — only the webhook moves the order.
+
+11. The webhook deletes its own idempotency row when the handler throws. The
+    row is inserted first so a Stripe retry is dismissed as a duplicate; if the
+    handler then fails, that row would dismiss the retry too. Deleting it
+    before returning 500 is what makes the retry mean something.
+
+12. Reviews and verification decisions run under the acting user's session, not
+    the service role. reviews_insert_buyer already requires the order be theirs
+    and released, and guard_review_reply() puts rating and body back on a
+    provider's reply. Re-checking those in TypeScript would be a second copy of
+    a rule that already exists in one place.
+
+13. Best match uses a 0.15 rating band, calibrated against the mockup's own
    stack (4.9/$170, 4.8/$160, 5.0/$190, badge on the 4.9). A 0.2 band pulls the
    4.8 in and the badge moves to the cheaper offer; no band at all moves it to
    the dearest. The band is what separates "near-identical rating, take the

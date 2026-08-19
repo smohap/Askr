@@ -30,16 +30,18 @@ v1.1 features inline. See the conflict note below.
 | Receive & compare offers | Built | `OfferStack`, `/requests/[id]/compare` |
 | Chat | Built | `src/components/chat/`, Realtime per (request, provider) |
 | Accept / reject | Built | `src/lib/orders/create.ts` |
-| Escrow payment | **Part built** | state machine + `transition()` done; Stripe, `/orders/[id]/pay`, timeline outstanding |
-| Ratings | **Not built** | schema and rating trigger exist; no UI |
+| Escrow payment | Built | `src/lib/stripe/`, `src/lib/escrow/settle.ts`, `/api/stripe/webhook`, `/orders/[id]` |
+| Ratings | Built | `/orders/[id]/review`, `/provider/reviews` with right of reply |
 | Provider profile & offers | Built | `src/app/(provider)/` |
-| Admin verification & disputes | **Not built** | schema, RLS and seed queue exist; no console |
+| Admin verification & disputes | Built | `src/app/(admin)/` |
 
-Remaining Phase 1 work, in build order: step 7 (Stripe half of escrow),
-step 8 (reviews), step 10 (admin console), step 11 (Playwright).
+Phase 1 is feature-complete. Steps 7, 8, 10 and 11 all landed, and the
+`/orders/[id]/pay` route that accepting an offer redirected to now exists.
 
-One known dangling route: accepting an offer redirects to `/orders/[id]/pay`,
-which arrives with step 7.
+What is *not* proven: no migration in this repo has ever run against a
+Postgres, and the Playwright suite has never executed — it needs a live
+database, Stripe test keys and `stripe listen` forwarding to the webhook. See
+`progress.txt` for the order to tackle that in.
 
 ## v1.1 additions — all Phase 2, none built
 
