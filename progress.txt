@@ -51,13 +51,16 @@ Step 5 — offers (buyer half done)
 
 NEXT
 ----
-Step 5 remainder: provider offer submission form, /requests/[id]/compare
-(mockup 05), offer accept/reject actions, /requests/[id]/offers/[offerId].
-Then steps 6-11: chat, Stripe escrow, reviews, provider dashboard, admin
-console, Playwright.
+Step 7 — escrow + Stripe. transition() and the state machine exist; what is
+missing is the Stripe Connect wiring, /api/stripe/webhook, /orders/[id]/pay
+and /orders/[id] (timeline rendered from order_events).
+NOTE: accepting an offer already redirects to /orders/[id]/pay, which does
+not exist yet. That is the one known dangling route.
+
+Then 8 (reviews), 10 (admin console), 11 (Playwright).
 
 Also still missing: database.types.ts (needs a live DB for typegen — RPC
-results are hand-typed until then).
+results and joined rows are hand-typed until then).
 
 
 DECISIONS THAT WOULD NOT BE OBVIOUS
