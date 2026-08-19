@@ -1,69 +1,133 @@
-import Image from "next/image";
+import Link from "next/link";
+import { AppNav } from "@/components/app-nav";
+import { Button } from "@/components/ui/button";
+import { LiveDot } from "@/components/ui/identity";
+import { EmptyState, PanelLink, SectionLabel } from "@/components/ui/panel";
+import { getViewer } from "@/lib/auth";
+import { formatDateTime, formatNzd } from "@/lib/money";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+/** Mockup screen 01. A guest sees the public feed; a buyer also sees their own. */
+export default async function HomePage() {
+  const viewer = await getViewer();
+  const supabase = await createClient();
+
+  const [{ data: categories }, { data: liveRequests }, mine] = await Promise.all([
+    supabase.from("categories").select("slug, name").eq("is_phase1", true).order("sort_order"),
+    supabase
+      .from("requests")
+      .select("id, title, budget_cents, budget_mode, needed_by, offers(count)")
+      .eq("status", "published")
+      .eq("visibility", "public")
+      .order("published_at", { ascending: false })
+      .limit(8),
+    viewer?.role === "buyer"
+      ? supabase
+          .from("requests")
+          .select("id, title, status, budget_cents, budget_mode, needed_by, offers(count)")
+          .eq("buyer_id", viewer.id)
+          .in("status", ["published", "awarded"])
+          .order("created_at", { ascending: false })
+          .limit(4)
+      : Promise.resolve({ data: null }),
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      <AppNav />
+      <main className="mx-auto w-full max-w-[520px] flex-1 px-5 pb-16 pt-7">
+        <h1 className="mb-1.5 font-display text-[25px] font-semibold leading-[1.2]">
+          What do you
+          <br />
+          <em className="not-italic text-signal">need</em> today?
+        </h1>
+        <p className="mb-5 text-[13px] text-muted">
+          Tell us once, name your price. Verified providers come to you.
+        </p>
+
+        <Link
+          href="/requests/new"
+          className="mb-3.5 block rounded-[14px] border border-grid bg-panel-raised p-4 transition-colors hover:border-signal-dim"
+        >
+          <span className="text-[14.5px] text-faint">
+            e.g. &ldquo;4-bedroom house clean, this Saturday&rdquo;
+          </span>
+        </Link>
+
+        <Link href="/requests/new">
+          <Button className="mb-6">Broadcast a request →</Button>
+        </Link>
+
+        <div className="scrollbar-none -mx-5 mb-2 flex gap-2 overflow-x-auto px-5 pb-1.5">
+          {categories?.map((c) => (
+            <Link
+              key={c.slug}
+              href={`/requests/new?category=${c.slug}`}
+              className="flex-none whitespace-nowrap rounded-full border border-grid bg-panel-raised px-3.5 py-2 text-[12px] text-muted transition-colors hover:border-signal-dim hover:text-text"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              {c.name}
+            </Link>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+
+        {mine?.data && mine.data.length > 0 && (
+          <section className="mt-6">
+            <SectionLabel className="mb-2.5">Your requests</SectionLabel>
+            <div className="space-y-2.5">
+              {mine.data.map((r) => (
+                <RequestCard key={r.id} request={r} href={`/requests/${r.id}`} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="mt-6">
+          <SectionLabel className="mb-2.5">Live requests</SectionLabel>
+          {liveRequests && liveRequests.length > 0 ? (
+            <div className="space-y-2.5">
+              {liveRequests.map((r) => (
+                <RequestCard key={r.id} request={r} href={viewer ? `/requests/${r.id}` : "/signup"} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="Nothing live right now"
+              hint="Published requests from across New Zealand show up here."
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          )}
+        </section>
       </main>
-    </div>
+    </>
+  );
+}
+
+type CardRequest = {
+  id: string;
+  title: string;
+  budget_cents: number | null;
+  budget_mode: "fixed" | "open";
+  needed_by: string | null;
+  offers: { count: number }[];
+};
+
+function RequestCard({ request, href }: { request: CardRequest; href: string }) {
+  const offerCount = request.offers?.[0]?.count ?? 0;
+
+  return (
+    <PanelLink href={href} className="p-3.5">
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <span className="text-[13.5px] font-semibold">{request.title}</span>
+        <span className="flex flex-none items-center gap-1.5 font-mono text-[10px] text-signal">
+          <LiveDot />
+          {offerCount > 0 ? `${offerCount} offer${offerCount === 1 ? "" : "s"}` : "Broadcasting"}
+        </span>
+      </div>
+      <div className="font-mono text-[11.5px] text-muted">
+        {request.budget_mode === "open" || request.budget_cents === null
+          ? "Open budget"
+          : `Budget ${formatNzd(request.budget_cents)}`}
+        {request.needed_by && ` · Due ${formatDateTime(request.needed_by)}`}
+      </div>
+    </PanelLink>
   );
 }
