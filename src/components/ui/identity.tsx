@@ -21,7 +21,10 @@ export function Wordmark({ size = 22 }: { size?: number }) {
   return (
     <span className="flex items-center gap-2">
       <BrandMark size={size} />
-      <span className="font-display text-[16px] font-bold">{BRAND.name}</span>
+      <span className="font-display text-[16px] font-bold">
+        {BRAND.nameLead}
+        <span className="text-signal">{BRAND.nameAccent}</span>
+      </span>
     </span>
   );
 }
