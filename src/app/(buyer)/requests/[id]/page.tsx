@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Radar } from "@/components/radar";
 import { OfferStack, type StackOffer } from "@/components/offers/offer-stack";
 import { Badge } from "@/components/ui/identity";
@@ -25,6 +25,18 @@ export default async function RequestPage({ params }: PageProps<"/requests/[id]"
     .single();
 
   if (!request) notFound();
+
+  // Once an offer is accepted the request has no decision left on it — the
+  // order is where everything happens from then on.
+  if (request.status !== "draft" && request.status !== "published") {
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("request_id", id)
+      .maybeSingle();
+
+    if (order) redirect(`/orders/${order.id}`);
+  }
 
   const { data: rawOffers } = await supabase
     .from("offers")
