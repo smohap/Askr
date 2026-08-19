@@ -1,7 +1,12 @@
 SERVUBER — BUILD PROGRESS
 =========================
-Phase 1 (MVP) per askr-build-prompt-v2.md. Behaviour from askr-prd.html,
-visual language from askr-mockup.html.
+Phase 1 (MVP) per askr-build-prompt-v2.md. Behaviour and visual language now
+from PRD/servuber-prd.html and PRD/servuber-mockup.html (v1.1).
+
+See docs/feature-status.md for the current feature list. Short version: v1.1
+added six features, ALL Phase 2, and Phase 1 scope is unchanged. Tokens are
+unchanged. Mockup screens renumbered — a new speed screen at 03 shifts the
+old 03-09 to 04-10, so older "mockup screen N" references are off by one.
 
 Brand: Servuber — "Service at your choice of price" (src/lib/brand.ts).
 The Postgres schema stays `askr`: it is an infra name, not the brand.
