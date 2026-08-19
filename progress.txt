@@ -1,116 +1,150 @@
 SERVUBER — BUILD PROGRESS
-=====================
+=========================
 Phase 1 (MVP) per askr-build-prompt-v2.md. Behaviour from askr-prd.html,
 visual language from askr-mockup.html.
+
+Brand: Servuber — "Service at your choice of price" (src/lib/brand.ts).
+The Postgres schema stays `askr`: it is an infra name, not the brand.
+Repo: https://github.com/smohap/Askr (branch main).
 
 
 DONE
 ----
-Step 1 (partial) — scaffold, tokens, schema, RLS, seed
+Step 1 — scaffold, tokens, schema, RLS, seed
+  * Next.js 16.3 App Router + TypeScript + Tailwind v4. Turbopack is default.
+  * src/styles/tokens.css holds the mockup :root verbatim and is the ONLY file
+    allowed a colour literal; globals.css maps it into Tailwind's @theme.
+  * 6 migrations: schema, RLS, storage (5 buckets), grants, matching.
+  * seed.sql: 18 categories, 1 buyer, 1 admin, 3 verified + 1 pending provider.
+  * src/lib/escrow/machine.ts — the state machine, pure.
 
-  * Next.js 16.3 App Router + TypeScript + Tailwind v4, src/ dir, @/* alias.
-    Turbopack is the default in 16 — no --turbopack flag needed.
-  * Design tokens: src/styles/tokens.css holds the mockup's :root verbatim and is
-    the ONLY file allowed a colour literal. src/app/globals.css imports it and
-    maps every token into Tailwind's @theme, so utilities are bg-panel,
-    text-signal, border-grid, font-display/font-sans/font-mono. Motion keyframes
-    (blink, sweep, land, state-change) live in globals.css with a
-    prefers-reduced-motion opt-out.
-  * supabase/migrations/20260809000100_schema.sql — all tables, enums, triggers,
-    the append-only guard, the state guard and apply_order_transition().
-  * supabase/migrations/20260809000200_rls.sql — RLS on every table.
-  * supabase/migrations/20260809000300_storage.sql — 5 buckets + object policies.
-  * supabase/seed.sql — 18 categories (6 Phase 1), 1 buyer, 1 admin,
-    3 verified providers, 1 pending provider with 2 pending documents.
-  * src/lib/config.ts, src/lib/money.ts — commission constant, cents helpers,
-    NZD and Pacific/Auckland formatting.
-  * src/lib/escrow/machine.ts + machine.test.ts — the state machine, 27 unit
-    tests passing (`npm test`), including all 64 state pairs.
-  * .env.example, init.sh, vitest.config.ts.
+Step 2 — auth and role routing
+  * src/proxy.ts (Next 16's middleware.ts) refreshes the session and bounces
+    guests off protected prefixes. No role check there — needs a DB read.
+  * src/lib/auth.ts — getViewer/requireViewer/requireRole. Uses getUser(),
+    not getSession(): getSession trusts the cookie, getUser revalidates.
+  * Login (password + magic link), signup with buyer/provider choice,
+    /auth/callback, sign out. Vague failures on purpose — see DECISIONS 7.
+  * src/components/ui/* — Button, Panel, Field, Avatar, LiveDot, Badge, TopBar.
+  * Home screen (mockup 01) serving guest and buyer.
+
+Step 3 — request creation
+  * src/lib/validation/request.ts — Zod, shared client/server. CATEGORY_FIELDS
+    is data: adding a category is a table entry, not a branch.
+  * /requests/new (mockup 02), /requests list with Live/Drafts/Closed.
+  * Media rides in the same FormData and uploads after insert, so the request
+    id is available as the storage folder the policies authorise on.
+
+Step 4 — matching and broadcast (UI done; notifications are DB rows only)
+  * askr.match_providers() — verified + category + BOTH radii satisfied.
+  * publishRequest() runs as service role because request_broadcasts has no
+    insert policy.
+  * Broadcasting screen with the radar sweep (mockup 03).
+
+Step 5 — offers (buyer half done)
+  * src/lib/offers/best-match.ts + tests — the documented Best match rule.
+  * OfferStack with sort by price/rating/ETA/distance, live via Realtime,
+    visible expiry countdown (mockup 04).
+
+40 unit tests passing (`npm test`). `npx next build` clean.
 
 
 NEXT
 ----
-Step 1 remainder: src/lib/supabase/{client,server,admin}.ts, database.types.ts,
-src/app/layout.tsx fonts (Space Grotesk / Inter / IBM Plex Mono via next/font),
-src/lib/escrow/transition.ts (the single entry point that calls assertTransition
-then the apply_order_transition RPC).
+Step 5 remainder: provider offer submission form, /requests/[id]/compare
+(mockup 05), offer accept/reject actions, /requests/[id]/offers/[offerId].
+Then steps 6-11: chat, Stripe escrow, reviews, provider dashboard, admin
+console, Playwright.
 
-Then steps 2-11 in build_order sequence. Task list mirrors them.
+Also still missing: database.types.ts (needs a live DB for typegen — RPC
+results are hand-typed until then).
 
 
 DECISIONS THAT WOULD NOT BE OBVIOUS
 -----------------------------------
 1. Escrow is enforced in two layers, deliberately.
-   - src/lib/escrow/machine.ts is PURE: the legal-move table, actor entitlement,
-     and required reasons. No DB, so it is exhaustively unit-testable with no
-     Docker. Adding an edge means editing the table; machine.test.ts hard-codes
-     the eight documented moves separately so the table cannot drift silently.
-   - askr.apply_order_transition() in SQL is the atomic tail: SELECT ... FOR
-     UPDATE, re-check the from-state, UPDATE orders, INSERT order_events, all in
-     one transaction. It is the only thing permitted to change orders.state —
-     the orders_state_guard trigger raises on any other UPDATE, including from
-     the service role, by checking a transaction-local setting the function sets.
+   - src/lib/escrow/machine.ts is PURE: the legal-move table, actor
+     entitlement, required reasons. No DB, so it is exhaustively unit-testable
+     with no Docker. machine.test.ts hard-codes the eight documented moves
+     separately so the table cannot drift silently.
+   - askr.apply_order_transition() is the atomic tail: SELECT ... FOR UPDATE,
+     re-check the from-state, UPDATE orders, INSERT order_events, one
+     transaction. The orders_state_guard trigger raises on any other UPDATE,
+     including from the service role.
    - order_events has a BEFORE UPDATE OR DELETE trigger that always raises.
-     Append-only is enforced at the table, not in RLS, because RLS does not apply
+     Append-only is enforced at the table, not RLS, because RLS does not apply
      to the service role.
 
-2. Money model. The buyer pays the provider's quote plus a 5% platform fee
+2. Money model. Buyer pays the quote plus a 5% platform fee
    (COMMISSION_BPS = 500). On release the platform keeps that fee as commission
    and the provider receives exactly what they quoted, so
-   commission_cents === platform_fee_cents and payout = total - commission.
-   This is what reproduces the mockup's $170.00 / $8.50 / $178.50. The PRD's
-   5-12% band is a pricing decision, not a per-order input.
+   commission_cents === platform_fee_cents. Reproduces the mockup's
+   $170.00 / $8.50 / $178.50.
 
 3. request_broadcasts is both the notification log and the RLS predicate. A
-   provider can read a request because a row exists linking them to it — which
-   is why private requests work without a second mechanism.
+   provider can read a request because a row links them to it — which is why
+   private requests need no second mechanism, and why only the service role may
+   write that table.
 
 4. No counter-offers (Phase 2). The partial unique index
-   offers_one_active_per_provider (request_id, provider_id) WHERE status='active'
-   is what makes withdraw-and-re-offer the negotiation mechanism instead.
+   offers_one_active_per_provider WHERE status='active' is what makes
+   withdraw-and-re-offer the negotiation mechanism instead.
 
 5. Admin is not self-assignable. handle_new_user() maps signup metadata to
    buyer/provider only; seed.sql promotes the one admin with a direct UPDATE.
-   guard_provider_self_service() likewise strips verification_status,
-   rating fields and stripe_account_id from any non-admin update.
+   guard_provider_self_service() strips verification_status, rating fields and
+   stripe_account_id from any non-admin update.
 
-6. Geo is a plain haversine SQL function (askr.distance_km), not PostGIS —
-   nothing in Phase 1 needs spatial indexes.
+6. Geo is a plain haversine SQL function (askr.distance_km), not PostGIS.
+   Matching needs BOTH radii to hold: the provider will travel that far AND the
+   buyer will look that far. One-sided matching fails in both directions.
+   No geocoder in Phase 1 — buyers pick from src/lib/nz-locations.ts, which
+   carries the coordinates. Swapping in a geocoder changes only that file.
+
+7. Auth failures are deliberately vague, and the magic-link form returns the
+   same notice whether or not the address exists. Distinguishing "no such
+   account" from "wrong password" enumerates registered emails.
+
+8. Best match uses a 0.15 rating band, calibrated against the mockup's own
+   stack (4.9/$170, 4.8/$160, 5.0/$190, badge on the 4.9). A 0.2 band pulls the
+   4.8 in and the badge moves to the cheaper offer; no band at all moves it to
+   the dearest. The band is what separates "near-identical rating, take the
+   cheaper" from "genuinely better rated, worth the money". A provider with no
+   ratings can never be best match — they have no rating to compare.
 
 
 DEPLOYMENT
 ----------
-Target: Vercel (Next.js app) + hosted Supabase project. Tables live in a
-Postgres schema named `askr`, NOT public.
+Target: Vercel + hosted Supabase. Tables live in schema `askr`, NOT public.
 
-Two settings that will silently break everything if missed:
+Two settings that silently break everything if missed:
   * Supabase > Project Settings > API > Exposed schemas must include `askr`.
     Without it every query returns "The schema must be one of the following".
   * The supabase-js clients pass { db: { schema: "askr" } }. Any new client
-    must do the same or it will query public and find nothing.
+    must do the same or it queries public and finds nothing.
 
 Custom schemas get none of the grants Supabase applies to public, which is why
 20260809000050_schema.sql sets usage + default privileges and
 20260809000400_grants.sql re-applies them explicitly after the tables exist.
-apply_order_transition has EXECUTE revoked from anon/authenticated: it is the
-sole writer of orders.state and only the service role may call it.
+apply_order_transition and match_providers have EXECUTE revoked from
+anon/authenticated — both are service-role operations.
 
-Vercel env vars needed: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+Realtime: OfferStack subscribes to postgres_changes on schema `askr`, table
+`offers`. The publication is set up in 20260809000100_schema.sql; confirm the
+four tables are listed after the first push.
+
+Vercel env vars: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
 SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY,
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_SITE_URL.
-
-Repo: https://github.com/smohap/Askr (branch main).
-Brand: Servuber — "Service at your choice of price" (src/lib/brand.ts).
-The Postgres schema stays skr: it is an infra name, not the brand.
 
 
 ENVIRONMENT NOTE
 ----------------
-This machine has no Docker and no Supabase CLI, so the migrations have not been
-executed anywhere yet — they are authored but unverified against a live
-Postgres. `./init.sh local` (Docker Desktop) or `./init.sh hosted` (linked
-project) will apply them. Expect to fix small SQL errors on first run.
+This machine has no Docker and no Supabase CLI, so NONE of the SQL has ever
+been executed. Six migrations, ~1000 lines, unverified against a live Postgres.
+This is the largest untested risk in the repo. `./init.sh local` (Docker) or
+`./init.sh hosted` (linked project) applies them; expect to fix errors on the
+first run.
 
 Node 26.4.0 / npm 11.17.0. npm 11 gates install scripts: if esbuild or
 unrs-resolver report missing binaries, run
