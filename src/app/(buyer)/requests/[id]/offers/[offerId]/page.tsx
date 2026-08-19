@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Countdown } from "@/components/countdown";
+import { ReviewList, type PublicReview } from "@/components/reviews/review-list";
 import { Avatar, Badge } from "@/components/ui/identity";
 import { Panel, SectionLabel, TopBar } from "@/components/ui/panel";
 import { requireRole } from "@/lib/auth";
@@ -46,12 +47,21 @@ export default async function OfferPage({ params }: PageProps<"/requests/[id]/of
     verification_status: string;
   };
 
-  const { data: broadcast } = await supabase
-    .from("request_broadcasts")
-    .select("distance_km")
-    .eq("request_id", id)
-    .eq("provider_id", provider.id)
-    .maybeSingle();
+  const [{ data: broadcast }, { data: reviews }] = await Promise.all([
+    supabase
+      .from("request_broadcasts")
+      .select("distance_km")
+      .eq("request_id", id)
+      .eq("provider_id", provider.id)
+      .maybeSingle(),
+    // Reviews are public, so this is the same list a guest would see.
+    supabase
+      .from("reviews")
+      .select("id, rating, body, reply_body, replied_at, created_at")
+      .eq("provider_id", provider.id)
+      .order("created_at", { ascending: false })
+      .limit(5),
+  ]);
 
   const amounts = quoteToAmounts(offer.price_cents);
   const live = offer.status === "active" && Date.parse(offer.expires_at) > Date.now();
@@ -126,6 +136,10 @@ export default async function OfferPage({ params }: PageProps<"/requests/[id]/of
             </Link>
 
             <OfferDecision offerId={offer.id} requestId={id} />
+
+            <div className="mt-5">
+              <ReviewList reviews={(reviews ?? []) as PublicReview[]} />
+            </div>
           </>
         ) : (
           <Panel>
