@@ -12,9 +12,12 @@ const empty: RequestFormState = {};
 export function RequestForm({
   categories,
   initialCategory,
+  initialTitle,
 }: {
   categories: { slug: string; name: string }[];
   initialCategory?: string;
+  /** Prefilled from the landing page hero, so what the visitor typed survives. */
+  initialTitle?: string;
 }) {
   const [category, setCategory] = useState(initialCategory ?? categories[0]?.slug ?? "");
   const [budgetMode, setBudgetMode] = useState<"fixed" | "open">("fixed");
@@ -32,6 +35,7 @@ export function RequestForm({
         <Input
           id="title"
           name="title"
+          defaultValue={initialTitle}
           required
           placeholder="4-bedroom house clean"
           maxLength={120}

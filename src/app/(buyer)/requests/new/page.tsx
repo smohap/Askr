@@ -6,7 +6,7 @@ import { RequestForm } from "./request-form";
 export const metadata: Metadata = { title: "New request" };
 
 export default async function NewRequestPage({ searchParams }: PageProps<"/requests/new">) {
-  const { category } = await searchParams;
+  const { category, title } = await searchParams;
   const supabase = await createClient();
 
   const { data: categories } = await supabase
@@ -21,6 +21,7 @@ export default async function NewRequestPage({ searchParams }: PageProps<"/reque
       <RequestForm
         categories={categories ?? []}
         initialCategory={typeof category === "string" ? category : undefined}
+        initialTitle={typeof title === "string" ? title : undefined}
       />
     </>
   );

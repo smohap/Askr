@@ -34,5 +34,19 @@
   /* text colour on a --signal-dim fill (mockup .msg.me) */
   --void-ink: #04140d;
 
+  /*
+   * Liquid glass — the marketing surface only. These are white translucencies
+   * rather than palette colours, but they are still colour literals, so they
+   * live here with everything else rather than inline in globals.css.
+   */
+  --glass-fill: rgba(255, 255, 255, 0.01);
+  --glass-inset: rgba(255, 255, 255, 0.1);
+  --glass-edge: rgba(255, 255, 255, 0.45);
+  --glass-edge-soft: rgba(255, 255, 255, 0.15);
+  --glass-edge-none: rgba(255, 255, 255, 0);
+
+  /* resting state of a word in the scroll-driven reveal, before it lights up */
+  --reveal-dim: rgba(237, 239, 243, 0.15);
+
   --radius: 10px;
 }
