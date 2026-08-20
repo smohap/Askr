@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code machine-local settings (hook toggles, per-machine permissions)
+.claude/settings.local.json
