@@ -25,7 +25,7 @@ const SOCIAL = [
  * Fixed and fully transparent — it floats over the hero video rather than
  * sitting on a bar. The glass buttons are the only thing with a surface.
  */
-export function MarketingNav() {
+export function MarketingNav({ showSignIn = true }: { showSignIn?: boolean } = {}) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-8 py-4 md:px-28">
       <nav className="flex items-center gap-8">
@@ -64,12 +64,14 @@ export function MarketingNav() {
             ))}
           </div>
 
-          <Link
-            href="/login"
-            className="liquid-glass rounded-full px-5 py-2.5 text-[13px] font-semibold transition-opacity hover:opacity-80"
-          >
-            Sign in
-          </Link>
+          {showSignIn && (
+            <Link
+              href="/login"
+              className="liquid-glass rounded-full px-5 py-2.5 text-[13px] font-semibold transition-opacity hover:opacity-80"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </nav>
     </header>

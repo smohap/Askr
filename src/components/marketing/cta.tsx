@@ -5,8 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BrandMark } from "@/components/ui/identity";
 import { fadeUp } from "./motion";
+import { MEDIA } from "./media";
 
-const CTA_STREAM = "https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8";
 
 /**
  * HLS background. Safari plays .m3u8 natively; everywhere else needs hls.js,
@@ -21,7 +21,7 @@ export function Cta() {
     if (!video) return;
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = CTA_STREAM;
+      video.src = MEDIA.ctaStream;
       return;
     }
 
@@ -30,7 +30,7 @@ export function Cta() {
     void import("hls.js").then(({ default: Hls }) => {
       if (!Hls.isSupported()) return;
       const instance = new Hls();
-      instance.loadSource(CTA_STREAM);
+      instance.loadSource(MEDIA.ctaStream);
       instance.attachMedia(video);
       hls = instance;
     });

@@ -4,9 +4,8 @@ import { motion } from "framer-motion";
 import { Avatar } from "@/components/ui/identity";
 import { BRAND } from "@/lib/brand";
 import { fadeUp } from "./motion";
+import { MEDIA } from "./media";
 
-const HERO_VIDEO =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260325_120549_0cd82c36-56b3-4dd9-b190-069cfc3a623f.mp4";
 
 /**
  * Full-viewport video hero. The form is a plain GET to /requests/new, so what
@@ -18,7 +17,7 @@ export function Hero({ providerCount, sampleNames }: { providerCount: number; sa
     <section className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-6 pb-20 pt-28 md:pt-32">
       <video
         className="absolute inset-0 size-full object-cover"
-        src={HERO_VIDEO}
+        src={MEDIA.hero}
         autoPlay
         loop
         muted

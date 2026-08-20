@@ -2,9 +2,8 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { MEDIA } from "./media";
 
-const MISSION_VIDEO =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260325_132944_a0d124bb-eaa1-4082-aa30-2310efb42b4b.mp4";
 
 /**
  * Scroll-driven word reveal. Each word owns a slice of the scroll range and
@@ -87,7 +86,7 @@ export function Mission() {
       <div className="mx-auto max-w-4xl">
         <video
           className="mx-auto mb-16 w-full max-w-[560px] rounded-3xl"
-          src={MISSION_VIDEO}
+          src={MEDIA.mission}
           autoPlay
           loop
           muted

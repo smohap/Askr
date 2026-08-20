@@ -39,15 +39,33 @@ const LEGAL: FooterLink[] = [
   { label: "Refund policy", soon: true },
 ];
 
-export function SiteFooter({ categories }: { categories: { slug: string; name: string }[] }) {
+export function SiteFooter({
+  categories = [],
+  /**
+   * "slim" drops the brand block and the four columns, leaving the locale and
+   * legal strips. Auth pages get that one — a fat footer under a two-field
+   * sign-in form buries the form.
+   */
+  variant = "full",
+}: {
+  categories?: { slug: string; name: string }[];
+  variant?: "full" | "slim";
+}) {
   const categoryLinks: FooterLink[] = categories.map((c) => ({
     label: c.name,
     href: `/requests/new?category=${c.slug}`,
   }));
 
   return (
-    <footer className="border-t border-grid/50 px-8 pb-10 pt-16 md:px-28">
+    <footer
+      className={
+        variant === "slim"
+          ? "border-t border-grid/50 px-8 pb-10 pt-8 md:px-28"
+          : "border-t border-grid/50 px-8 pb-10 pt-16 md:px-28"
+      }
+    >
       <div className="mx-auto max-w-6xl">
+        {variant === "full" && (
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
           <div className="max-w-xs">
             <Link href="/" className="flex items-center gap-2.5">
@@ -79,8 +97,15 @@ export function SiteFooter({ categories }: { categories: { slug: string; name: s
           <Column title="Company" links={COMPANY} />
           <Column title="Support" links={SUPPORT} />
         </div>
+        )}
 
-        <div className="mt-14 flex flex-col gap-5 border-t border-grid/50 pt-7 md:flex-row md:items-center md:justify-between">
+        <div
+          className={
+            variant === "slim"
+              ? "flex flex-col gap-5 md:flex-row md:items-center md:justify-between"
+              : "mt-14 flex flex-col gap-5 border-t border-grid/50 pt-7 md:flex-row md:items-center md:justify-between"
+          }
+        >
           <div className="flex items-center gap-4 font-mono text-[11.5px] text-muted">
             <span>🌐 English</span>
             <span aria-hidden className="text-faint">•</span>

@@ -2,9 +2,8 @@
 
 import { motion } from "framer-motion";
 import { fadeUp } from "./motion";
+import { MEDIA } from "./media";
 
-const SOLUTION_VIDEO =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260325_125119_8e5ae31c-0021-4396-bc08-f7aebeb877a2.mp4";
 
 const FEATURES = [
   {
@@ -47,7 +46,7 @@ export function Solution() {
         <motion.video
           {...fadeUp(0.2)}
           className="mt-14 aspect-[3/1] w-full rounded-2xl object-cover"
-          src={SOLUTION_VIDEO}
+          src={MEDIA.solution}
           autoPlay
           loop
           muted
